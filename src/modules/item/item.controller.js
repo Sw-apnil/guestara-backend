@@ -1,8 +1,8 @@
 const service = require('./item.service')
-const { validateCreateItem } = require('./item.validation')
 const Item = require('./item.model')
 const { calculatePrice } = require('../pricing/pricing.engine')
 const { resolveTax } = require('./item.service')
+const { validateCreateItem } = require('./item.validation')
 
 const createItem = async (req, res) => {
   try {
@@ -15,10 +15,6 @@ const createItem = async (req, res) => {
     res.status(400).json({ message: err.message })
   }
 }
-
-
-
-
 
 const getItemPrice = async (req, res) => {
   try {
@@ -36,13 +32,18 @@ const getItemPrice = async (req, res) => {
       }
     })
 
+    const effectiveBasePrice =
+      priceResult.discountedPrice ?? priceResult.basePrice
+
     const taxPercentage = await resolveTax(item)
-    const taxAmount = (priceResult.basePrice * taxPercentage) / 100
-    const finalPrice = priceResult.basePrice + taxAmount
+    const taxAmount = (effectiveBasePrice * taxPercentage) / 100
+    const finalPrice = effectiveBasePrice + taxAmount
 
     res.json({
       pricingType: priceResult.pricingType,
       basePrice: priceResult.basePrice,
+      discount: priceResult.discount,
+      discountedPrice: priceResult.discountedPrice,
       appliedTier: priceResult.appliedTier,
       taxPercentage,
       taxAmount,
@@ -53,8 +54,7 @@ const getItemPrice = async (req, res) => {
   }
 }
 
-
-
-
-
-module.exports = { createItem,getItemPrice }
+module.exports = {
+  createItem,
+  getItemPrice
+}
