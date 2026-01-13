@@ -22,20 +22,28 @@ const createItem = async (req, res) => {
 
 const getItemPrice = async (req, res) => {
   try {
+    const { usage } = req.query
+
     const item = await Item.findById(req.params.id)
     if (!item || !item.is_active) {
       return res.status(404).json({ message: 'Item not found' })
     }
 
-    const priceResult = calculatePrice({ item })
-    const taxPercentage = await resolveTax(item)
+    const priceResult = calculatePrice({
+      item,
+      context: {
+        usage: usage ? Number(usage) : undefined
+      }
+    })
 
+    const taxPercentage = await resolveTax(item)
     const taxAmount = (priceResult.basePrice * taxPercentage) / 100
     const finalPrice = priceResult.basePrice + taxAmount
 
     res.json({
       pricingType: priceResult.pricingType,
       basePrice: priceResult.basePrice,
+      appliedTier: priceResult.appliedTier,
       taxPercentage,
       taxAmount,
       finalPrice
@@ -44,6 +52,7 @@ const getItemPrice = async (req, res) => {
     res.status(400).json({ message: err.message })
   }
 }
+
 
 
 
