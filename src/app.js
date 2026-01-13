@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const categoryRoutes = require('./modules/category/category.routes')
+const subcategoryRoutes = require('./modules/subcategory/subcategory.routes')
 
 const app = express()
 
@@ -8,6 +9,9 @@ app.use(cors())
 app.use(express.json())
 
 
+
+
+app.use('/subcategories', subcategoryRoutes)
 
 app.use('/categories', categoryRoutes)
 
