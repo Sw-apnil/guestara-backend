@@ -2,6 +2,7 @@ const Item = require('./item.model')
 const Category = require('../category/category.model')
 const Subcategory = require('../subcategory/subcategory.model')
 
+
 const createItem = async (data) => {
   if (data.parentType === 'CATEGORY') {
     const category = await Category.findOne({
@@ -22,4 +23,28 @@ const createItem = async (data) => {
   return Item.create(data)
 }
 
-module.exports = { createItem }
+
+
+const resolveTax = async (item) => {
+  if (item.tax_applicable != null) {
+    return item.tax_applicable
+      ? item.tax_percentage
+      : 0
+  }
+
+  if (item.subcategoryId) {
+    const sub = await Subcategory.findById(item.subcategoryId).populate('categoryId')
+    if (sub.tax_applicable != null) {
+      return sub.tax_applicable ? sub.tax_percentage : 0
+    }
+    return sub.categoryId.tax_percentage || 0
+  }
+
+  const cat = await Category.findById(item.categoryId)
+  return cat.tax_applicable ? cat.tax_percentage : 0
+}
+
+
+
+
+module.exports = { createItem,resolveTax }
