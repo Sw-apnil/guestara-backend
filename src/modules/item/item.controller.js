@@ -18,7 +18,7 @@ const createItem = async (req, res) => {
 
 const getItemPrice = async (req, res) => {
   try {
-    const { usage } = req.query
+    const { usage ,time} = req.query
 
     const item = await Item.findById(req.params.id)
     if (!item || !item.is_active) {
@@ -28,7 +28,8 @@ const getItemPrice = async (req, res) => {
     const priceResult = calculatePrice({
       item,
       context: {
-        usage: usage ? Number(usage) : undefined
+        usage: usage ? Number(usage) : undefined,
+        time
       }
     })
 
