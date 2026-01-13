@@ -1,9 +1,14 @@
 const service = require('./item.service')
 const Item = require('./item.model')
+
 const { calculatePrice } = require('../pricing/pricing.engine')
 const { resolveTax } = require('./item.service')
 const { validateCreateItem } = require('./item.validation')
+const { getAddonsForItem } = require('../addon/addon.service')
 
+/**
+ * CREATE ITEM
+ */
 const createItem = async (req, res) => {
   try {
     const error = validateCreateItem(req.body)
@@ -16,15 +21,21 @@ const createItem = async (req, res) => {
   }
 }
 
+/**
+ * GET ITEM PRICE (Pricing + Addons + Tax)
+ */
 const getItemPrice = async (req, res) => {
   try {
-    const { usage ,time} = req.query
+    const { usage, time, addons } = req.query
+    const selectedAddonIds = addons ? addons.split(',') : []
 
+    // Fetch item
     const item = await Item.findById(req.params.id)
     if (!item || !item.is_active) {
       return res.status(404).json({ message: 'Item not found' })
     }
 
+    // Base pricing from pricing engine
     const priceResult = calculatePrice({
       item,
       context: {
@@ -33,19 +44,40 @@ const getItemPrice = async (req, res) => {
       }
     })
 
-    const effectiveBasePrice =
+    const baseForAddon =
       priceResult.discountedPrice ?? priceResult.basePrice
 
-    const taxPercentage = await resolveTax(item)
-    const taxAmount = (effectiveBasePrice * taxPercentage) / 100
-    const finalPrice = effectiveBasePrice + taxAmount
+    // Resolve addons
+    const resolvedAddons = await getAddonsForItem(
+      item._id,
+      selectedAddonIds
+    )
 
+    const addonsTotal = resolvedAddons.reduce(
+      (sum, addon) => sum + addon.price,
+      0
+    )
+
+    // Subtotal (base + addons)
+    const subtotal = baseForAddon + addonsTotal
+
+    // Tax calculation
+    const taxPercentage = await resolveTax(item)
+    const taxAmount = (subtotal * taxPercentage) / 100
+    const finalPrice = subtotal + taxAmount
+
+    // Final response
     res.json({
       pricingType: priceResult.pricingType,
       basePrice: priceResult.basePrice,
-      discount: priceResult.discount,
       discountedPrice: priceResult.discountedPrice,
       appliedTier: priceResult.appliedTier,
+      addons: resolvedAddons.map(a => ({
+        id: a._id,
+        name: a.name,
+        price: a.price
+      })),
+      addonsTotal,
       taxPercentage,
       taxAmount,
       finalPrice
