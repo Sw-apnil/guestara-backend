@@ -1,7 +1,7 @@
 {
   "name": "guestara-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "A production-style Node.js backend for managing categories, items, dynamic pricing, add-ons, and booking availability for restaurants or service-based businesses.",
   "main": "index.js",
   "scripts": {
     "server": "nodemon src/server.js",
@@ -15,9 +15,17 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "mongoose": "^9.1.3"
+    "mongoose": "^9.1.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sw-apnil/guestara-backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sw-apnil/guestara-backend/issues"
+  },
+  "homepage": "https://github.com/Sw-apnil/guestara-backend#readme"
 }
